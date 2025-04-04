@@ -91,11 +91,11 @@ local render_context = function(context)
   end
   if parent_id then
     -- lazy loading a child folder
-    core.setup_tree_nodes(root.children)
+    core.setup_tree_items(root.children)
     renderer.show_nodes(root.children, state, parent_id, context.callback)
   else
     -- full render of the tree
-    core.setup_tree_nodes({ root })
+    core.setup_tree_items({ root }, true)
     renderer.show_nodes({ root }, state, nil, context.callback)
   end
 

@@ -1,5 +1,4 @@
 --This file should contain all commands meant to be used by mappings.
-
 local cc = require('neo-tree.sources.common.commands')
 local neojava = require('neojava')
 local utils = require('neo-tree.utils')
@@ -195,7 +194,22 @@ M.prev_git_modified = function(state)
 end
 
 M.open = function(state)
-  cc.open(state, utils.wrap(neojava.toggle_directory, state))
+  local node = state.tree:get_node()
+  if node.extra and node.extra.java_type == 'maven_libraries' then
+    neojava_core.load_maven_libraries(state.tree, node, function(_state)
+      if _state == neojava_core_utils.SUCCEED_STATE then
+        cc.open(state, utils.wrap(neojava.toggle_directory, state))
+      end
+    end)
+  elseif node.extra and node.extra.java_type == 'maven_library' then
+    neojava_core.load_maven_library(state.tree, node, function(_state)
+      if _state == neojava_core_utils.SUCCEED_STATE then
+        cc.open(state, utils.wrap(neojava.toggle_directory, state))
+      end
+    end)
+  else
+    cc.open(state, utils.wrap(neojava.toggle_directory, state))
+  end
 end
 M.open_split = function(state)
   cc.open_split(state, utils.wrap(neojava.toggle_directory, state))
