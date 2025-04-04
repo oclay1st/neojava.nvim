@@ -6,6 +6,9 @@ local sep = utils.path_separator
 
 local M = {}
 
+M.SUCCEED_STATE = 'SUCCEED'
+M.FAILED_STATE = 'FAILED'
+
 local java_path_patterns = {
   'src' .. sep .. 'main' .. sep .. 'java',
   'src' .. sep .. 'test' .. sep .. 'java',
@@ -165,6 +168,21 @@ function M.create_file(path, content, callback)
     log.warn(string.format("Failed to close file '%s': %s", path, close_err))
   end
   complete()
+end
+
+---Determine if the path is a Maven pom.xml
+---@param path string
+---@return boolean
+function M.is_maven_file(path)
+  return path:find(sep .. 'pom%.xml$') and true or false
+end
+
+---Determine if the path is a Gradle
+---@param path string
+---@return boolean
+function M.is_gradle_file(path)
+  return (path:find(sep .. '.*build%.gradle') or path:find(sep .. '.*settings%.gradle')) and true
+    or false
 end
 
 return M
