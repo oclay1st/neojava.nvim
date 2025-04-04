@@ -21,6 +21,9 @@ M.name = function(config, node, state)
   if node.path and neojava_core_utils.is_java_file_inside_package(node.path) then
     name.text = string.gsub(name.text, '%.java$', '')
   end
+  if node.extra and node.extra.java_type == 'jar_class_file' then
+    name.text = string.gsub(name.text, '%.class$', '')
+  end
   return name
 end
 

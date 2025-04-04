@@ -26,12 +26,14 @@ local function create_item(path)
   if is_directory then
     item.type = 'directory'
     item.children = {}
+    item.extra = { java_type = 'jar_directory' }
   else
     item.type = 'file'
     item.base = name:match('^([-_,()%s%w%i]+)%.')
     item.ext = name:match('%.([-_,()%s%w%i]+)$')
     item.exts = name:match('^[-_,()%s%w%i]+%.(.*)')
     item.name_lcase = name:lower()
+    item.extra = { java_type = name:match('%.class') and 'jar_class_file' or 'jar_file' }
   end
   return item
 end
