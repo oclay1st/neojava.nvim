@@ -27,8 +27,22 @@ end
 ---@param config neotree.Component.Common.Icon
 M.icon = function(config, node, state)
   local icon = common.icon(config, node, state)
-  if node.extra and node.extra.java_type == 'external_libraries' then
-    icon.text = '*'
+  if node.extra then
+    if node.extra.java_type_loding then
+      icon.highlight = 'Function'
+    end
+    if node.extra.java_type == 'external_libraries' then
+      icon.text = ''
+    end
+    if node.extra.java_type == 'maven_libraries' then
+      icon.text = ''
+    end
+    if node.extra.java_type == 'gradle_libraries' then
+      icon.text = ''
+    end
+    if node.extra.java_type == 'maven_library' or node.extra.java_type == 'gradle_library' then
+      icon.text = ''
+    end
   end
   return icon
 end
