@@ -70,10 +70,10 @@ local function group_package(item, force)
     and (neojava_core_utils.is_inside_java_package(item.path) or force)
   then
     first_child.name = item.name .. '.' .. first_child.name
-    return group_package(first_child)
+    return group_package(first_child, force)
   else
     for i, child in ipairs(item.children) do
-      item.children[i] = group_package(child)
+      item.children[i] = group_package(child, force)
     end
     return item
   end
@@ -153,6 +153,7 @@ M.load_maven_libraries = function(tree, node, callback)
   neojava_core_maven.load_maven_dependencies(base_path, function(_state, items)
     node.extra.java_type_loading = false
     if _state == neojava_core_utils.SUCCEED_STATE then
+      sort_items(items)
       local nodes = {} ---@type NuiTree.Node[]
       for index, item in ipairs(items) do
         nodes[index] = NuiTree.Node({
