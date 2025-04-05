@@ -43,7 +43,11 @@ end
 local function convert_paths_to_items(paths)
   local indexed_items = {}
   for _, path in ipairs(paths) do
-    if not indexed_items[path] then
+    if
+      not indexed_items[path]
+      and not neojava_core_utils.is_anonymous_class(path)
+      and not neojava_core_utils.is_inner_class(path)
+    then
       local item = create_item(path)
       indexed_items[path] = item
       if item.parent_path then

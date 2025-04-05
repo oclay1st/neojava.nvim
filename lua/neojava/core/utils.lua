@@ -185,4 +185,18 @@ function M.is_gradle_file(path)
     or false
 end
 
+---Determine if the path is an anonymous class path
+---@param path string
+---@return boolean
+function M.is_anonymous_class(path)
+  return path:find('%$%d+%.class$') and true or false
+end
+
+---Determine if the path is a inner class
+---@param path string
+---@return boolean
+function M.is_inner_class(path)
+  return path:find('%$(.-)%.class$') and true or false
+end
+
 return M
