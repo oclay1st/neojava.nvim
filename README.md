@@ -7,7 +7,7 @@
 
 **neojava.nvim** is a source plugin of Neotree to explore your Java projects.
 
-<img src="assets/screentshot.png"  align="center" alt='neojava'>
+<img src="assets/screenshot.png"  align="center" alt='neojava'>
 
 ## ✨ Features
 
