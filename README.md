@@ -40,6 +40,10 @@ This plugin is under **development** and has some known issues, so it is not con
         'MunifTanjim/nui.nvim',
         { 'oclay1st/neojava.nvim' },
     }
+    opts = {
+        sources = { 'filesystem', 'buffers', 'git_status', 'neojava' },
+        default_source = 'neojava',
+    }
 }
 ```
 
