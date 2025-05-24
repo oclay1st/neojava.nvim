@@ -199,4 +199,26 @@ function M.is_inner_class(path)
   return path:find('%$(.-)%.class$') and true or false
 end
 
+-- URI encode
+function M.uri_encode(str)
+  if str then
+    str = string.gsub(str, '\n', '\r\n')
+    str = string.gsub(str, '([^%w %-%_%.%~])', function(c)
+      return string.format('%%%02X', string.byte(c)) .. '/'
+    end)
+    str = string.gsub(str, ' ', '+')
+  end
+  return str
+end
+
+---Get the group id parts
+---@param name string
+M.resove_package_parts = function(name)
+  local parts = {}
+  for part in name:gmatch('([^.]+)') do
+    table.insert(parts, part)
+  end
+  return parts
+end
+
 return M

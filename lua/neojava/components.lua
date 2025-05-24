@@ -31,9 +31,6 @@ end
 M.icon = function(config, node, state)
   local icon = common.icon(config, node, state)
   if node.extra then
-    if node.extra.java_type_loding then
-      icon.highlight = 'Function'
-    end
     if node.extra.java_type == 'external_libraries' then
       icon.text = ''
     end

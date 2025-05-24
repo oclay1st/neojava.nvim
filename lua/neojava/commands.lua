@@ -195,18 +195,37 @@ end
 
 M.open = function(state)
   local node = state.tree:get_node()
-  if node.extra and node.extra.java_type == 'maven_libraries' then
+  if node.extra and node.extra.java_type == 'maven_libraries' and not node.loaded then
     neojava_core.load_maven_libraries(state.tree, node, function(_state)
       if _state == neojava_core_utils.SUCCEED_STATE then
         cc.open(state, utils.wrap(neojava.toggle_directory, state))
       end
     end)
-  elseif node.extra and node.extra.java_type == 'maven_library' then
+  elseif node.extra and node.extra.java_type == 'maven_library' and not node.loaded then
     neojava_core.load_maven_library(state.tree, node, function(_state)
       if _state == neojava_core_utils.SUCCEED_STATE then
         cc.open(state, utils.wrap(neojava.toggle_directory, state))
       end
     end)
+  elseif node.extra and node.extra.java_type == 'gradle_libraries' and not node.loaded then
+    neojava_core.load_gradle_libraries(state.tree, node, function(_state)
+      if _state == neojava_core_utils.SUCCEED_STATE then
+        cc.open(state, utils.wrap(neojava.toggle_directory, state))
+      end
+    end)
+  elseif node.extra and node.extra.java_type == 'gradle_library' and not node.loaded then
+    neojava_core.load_gradle_library(state.tree, node, function(_state)
+      if _state == neojava_core_utils.SUCCEED_STATE then
+        cc.open(state, utils.wrap(neojava.toggle_directory, state))
+      end
+    end)
+  elseif node.extra and node.extra.java_type == 'jar_class_file' then
+    local client = vim.lsp.get_clients({ name = 'jdtls' })[1]
+    if not client then
+      log.error('Must have an active `jdtls` client to load the class ')
+      return
+    end
+    cc.open(state, utils.wrap(neojava.toggle_directory, state))
   else
     cc.open(state, utils.wrap(neojava.toggle_directory, state))
   end

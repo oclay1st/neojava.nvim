@@ -19,7 +19,7 @@ local function create_item(path)
     id = path,
     name = name,
     path = path,
-    loaded = false,
+    loaded = true,
     parent_path = vim.trim(parent) ~= '' and parent .. '/' or nil,
   }
   local is_directory = path:find('/$')

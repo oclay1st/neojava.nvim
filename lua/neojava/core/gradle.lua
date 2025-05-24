@@ -1,19 +1,18 @@
-local log = require('neo-tree.log')
 local utils = require('neo-tree.utils')
-local neojava_core_utils = require('neojava.core.utils')
 local JARParser = require('neojava.core.jar_parser')
+local neojava_core_utils = require('neojava.core.utils')
+local log = require('neo-tree.log')
 
 local M = {}
 
-M.load_dependencies = function(maven_base_path, callback)
-  local susscces, maven_sources = pcall(require, 'maven.sources')
+M.load_dependencies = function(base_path, callback)
+  local susscces, gradle_sources = pcall(require, 'gradle.sources')
   if not susscces then
-    log.error('Unable to load Maven libraries. Install the Maven plugin: oclay1st/maven.nvim')
+    log.error('Unable to load Gralde libraries. Install the Maven plugin: oclay1st/gradle.nvim')
     callback({})
     return
   end
-  local pom_xml_path = maven_base_path .. utils.path_separator .. 'pom.xml'
-  maven_sources.load_project_dependencies(pom_xml_path, false, function(_state, dependencies)
+  gradle_sources.load_project_dependencies(base_path, false, function(_state, dependencies)
     if _state == 'FAILED' then
       callback(neojava_core_utils.FAILED_STATE, nil)
     else
@@ -29,9 +28,9 @@ M.load_dependencies = function(maven_base_path, callback)
             type = 'directory',
             loaded = false,
             extra = {
-              java_type = 'maven_library',
-              group_id = dependency.group_id,
-              artifact_id = dependency.artifact_id,
+              java_type = 'gradle_library',
+              group = dependency.group,
+              name = dependency.name,
               version = dependency.version,
             },
           }
@@ -44,21 +43,26 @@ M.load_dependencies = function(maven_base_path, callback)
   end)
 end
 
-M.load_jar = function(group_id, artifact_id, version, callback)
-  local susscces, maven_utils = pcall(require, 'maven.utils')
+M.load_jar = function(group, name, version, callback)
+  local susscces, gradle_utils = pcall(require, 'gradle.utils')
   if not susscces then
-    log.error('Unable to load Maven libraries. Install the Maven plugin: oclay1st/maven.nvim')
+    log.error('Unable to load Gradle library. Install the Gradle plugin: oclay1st/gradle.nvim')
     callback({})
     return
   end
-  local jar_path = maven_utils.get_jar_file_path(group_id, artifact_id, version) --- @type string
+  local jar_path = gradle_utils.get_jar_file_path(group, name, version) --- @type string
+  vim.print(jar_path)
+  if jar_path == '' then
+    log.error("JAR File doesn't exists")
+    return
+  end
   local function update_items(items)
     if not items or #items == 0 then
       return
     end
     for _, item in ipairs(items) do
       if item.extra.java_type == 'jar_class_file' and item.parent_path then
-        local jar_name = artifact_id .. '-' .. version .. '.jar'
+        local jar_name = name .. '-' .. version .. '.jar'
         local pkg = item.parent_path:gsub('/', '.')
         pkg = pkg:gsub('%.$', '')
         local encode_path = neojava_core_utils.uri_encode(jar_path)
@@ -86,11 +90,6 @@ M.load_jar = function(group_id, artifact_id, version, callback)
     end
     callback(_state, items)
   end)
-end
-
--- jdt://contents/spring-web-6.1.8.jar/org.springframework.http/MediaType.class?=demo4/%5C/home%5C/oclay%5C/.m2%5C/repository%5C/org%5C/springframework%5C/spring-web%5C/6.1.8%5C/spring-web-6.1.8.jar=/maven.pomderived=/true=/=/javadoc_location=/jar:file:%5C/home%5C/oclay%5C/.m2%5C/repository%5C/org%5C/springframework%5C/spring-web%5C/6.1.8%5C/spring-web-6.1.8-javadoc.jar%5C!%5C/=/=/maven.groupId=/org.springframework=/=/maven.artifactId=/spring-web=/=/maven.version=/6.1.8=/=/maven.scope=/compile=/=/maven.pomderived=/true=/%3Corg.springframework.http(MediaType.class
-M.resolve_maven_jar_class_path = function()
-  --
 end
 
 return M

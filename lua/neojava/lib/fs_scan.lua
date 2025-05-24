@@ -11,7 +11,7 @@ local fs_watch = require('neo-tree.sources.filesystem.lib.fs_watch')
 local git = require('neo-tree.git')
 local events = require('neo-tree.events')
 local async = require('plenary.async')
-local core = require('neojava.core')
+local neojava_core = require('neojava.core')
 
 local M = {}
 
@@ -91,11 +91,11 @@ local render_context = function(context)
   end
   if parent_id then
     -- lazy loading a child folder
-    core.setup_tree_items(root.children)
+    neojava_core.setup_tree_items(root.children)
     renderer.show_nodes(root.children, state, parent_id, context.callback)
   else
     -- full render of the tree
-    core.setup_tree_items({ root }, true)
+    neojava_core.setup_tree_items({ root }, true)
     renderer.show_nodes({ root }, state, nil, context.callback)
   end
 

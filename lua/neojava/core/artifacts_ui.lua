@@ -9,6 +9,7 @@ local neojava_core_templates = require('neojava.core.templates')
 local neojava_core_utils = require('neojava.core.utils')
 local log = require('neo-tree.log')
 local utils = require('neo-tree.utils')
+local event = require('nui.utils.autocmd').event
 local loop = vim.uv or vim.loop
 
 ---@class ArtifactsUI
@@ -52,6 +53,7 @@ function ArtifactsUI:_create_options_component()
     table.insert(menu_items, Menu.item(line, { type = item.type }))
   end
   local opts = popups.popup_options('Create an artifact:', self._options_width)
+  opts.zindex = 60
   opts.position.col = self._col_position
   opts.size = {
     height = #menu_items,
@@ -73,6 +75,9 @@ function ArtifactsUI:_create_options_component()
       self._input_component:show()
     end,
   })
+  self._options_component:on({ event.BufLeave, event.BufDelete }, function()
+    self._options_component:unmount()
+  end, { once = true })
 end
 ---@private Create the input component
 function ArtifactsUI:_create_input_component()

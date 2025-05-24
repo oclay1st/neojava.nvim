@@ -2,6 +2,8 @@ local ArtifactsUI = require('neojava.core.artifacts_ui')
 local neojava_core_utils = require('neojava.core.utils')
 local NuiTree = require('nui.tree')
 local neojava_core_maven = require('neojava.core.maven')
+local neojava_core_gradle = require('neojava.core.gradle')
+local log = require('neo-tree.log')
 local M = {}
 
 ---@class Item
@@ -17,6 +19,21 @@ local M = {}
 ---@field exts? string[]
 ---@field name_lcase? string
 ---@field extra? any
+
+local maven_libraries_items = {}
+
+local gradle_libraries_items = {}
+
+local function find_item(items, id)
+  local _item
+  for _, item in ipairs(items) do
+    if item.id == id then
+      _item = item
+      break
+    end
+  end
+  return _item
+end
 
 ---Sort all items
 ---@param items Item[]
@@ -49,7 +66,7 @@ local function convert_item_to_node(item, level)
     id = item.id,
     name = item.name,
     type = item.type,
-    loaded = true,
+    loaded = item.loaded,
     extra = item.extra,
     level = level,
   }, children)
@@ -125,7 +142,7 @@ M.add_external_libraries_item = function(items, is_root)
         name = 'Maven',
         type = 'directory',
         loaded = false,
-        children = {},
+        children = maven_libraries_items,
         extra = { java_type = 'maven_libraries' },
       })
       _has_maven_file = true
@@ -136,7 +153,7 @@ M.add_external_libraries_item = function(items, is_root)
         name = 'Gradle',
         type = 'directory',
         loaded = false,
-        children = {},
+        children = gradle_libraries_items,
         extra = { java_type = 'gradle_libraries' },
       })
       _has_gradle_file = true
@@ -149,21 +166,15 @@ end
 
 M.load_maven_libraries = function(tree, node, callback)
   local base_path = tree:get_node(node:get_parent_id()):get_parent_id()
-  node.extra.java_type_loading = true
-  neojava_core_maven.load_maven_dependencies(base_path, function(_state, items)
-    node.extra.java_type_loading = false
+  log.info('Loading Maven Libraries...')
+  neojava_core_maven.load_dependencies(base_path, function(_state, items)
     if _state == neojava_core_utils.SUCCEED_STATE then
       sort_items(items)
+      maven_libraries_items = items
       local nodes = {} ---@type NuiTree.Node[]
       for index, item in ipairs(items) do
-        nodes[index] = NuiTree.Node({
-          id = item.id,
-          name = item.name,
-          type = item.type,
-          loaded = item.loaded,
-          extra = vim.tbl_extend('force', item.extra, { java_type = 'maven_library' }),
-          level = node.level + 1,
-        })
+        local node_child = convert_item_to_node(item, node.level + 1)
+        nodes[index] = node_child
       end
       vim.schedule(function()
         node.loaded = true
@@ -179,11 +190,11 @@ end
 
 M.load_maven_library = function(tree, node, callback)
   local group_id = node.extra.group_id ---@type string
-  local group_id_parts = neojava_core_maven.resove_group_id_parts(group_id)
+  local group_id_parts = neojava_core_utils.resove_package_parts(group_id)
   local artifact_id = node.extra.artifact_id ---@type string
   local version = node.extra.version ---@type string
-  node.extra.java_type_loading = true
-  neojava_core_maven.load_maven_jar(group_id, artifact_id, version, function(_state, items)
+  log.info('Loading JAR File Content...')
+  neojava_core_maven.load_jar(group_id, artifact_id, version, function(_state, items)
     node.extra.java_type_loading = false
     if _state == neojava_core_utils.SUCCEED_STATE then
       local _node_children = {}
@@ -194,6 +205,69 @@ M.load_maven_library = function(tree, node, callback)
         items[index] = item
       end
       sort_items(items)
+      local maven_library_item = find_item(maven_libraries_items, node:get_id())
+      maven_library_item.loaded = true
+      maven_library_item.children = items
+      for index, item in ipairs(items) do
+        local _node_child = convert_item_to_node(item, node.level + 1)
+        _node_children[index] = _node_child
+      end
+      vim.schedule(function()
+        node.loaded = true
+        tree:set_nodes(_node_children, node:get_id())
+        tree:render()
+        callback(neojava_core_utils.SUCCEED_STATE)
+      end)
+    else
+      callback(neojava_core_utils.FAILED_STATE)
+    end
+  end)
+end
+
+M.load_gradle_libraries = function(tree, node, callback)
+  local base_path = tree:get_node(node:get_parent_id()):get_parent_id()
+  log.info('Loading Gradle Libraries...')
+  neojava_core_gradle.load_dependencies(base_path, function(_state, items)
+    if _state == neojava_core_utils.SUCCEED_STATE then
+      sort_items(items)
+      gradle_libraries_items = items
+      local nodes = {} ---@type NuiTree.Node[]
+      for index, item in ipairs(items) do
+        local node_child = convert_item_to_node(item, node.level + 1)
+        nodes[index] = node_child
+      end
+      vim.schedule(function()
+        node.loaded = true
+        tree:set_nodes(nodes, node:get_id())
+        tree:render()
+        callback(neojava_core_utils.SUCCEED_STATE)
+      end)
+    else
+      callback(neojava_core_utils.FAILED_STATE)
+    end
+  end)
+end
+
+M.load_gradle_library = function(tree, node, callback)
+  local group = node.extra.group ---@type string
+  local group_parts = neojava_core_utils.resove_package_parts(group)
+  local name = node.extra.name ---@type string
+  local version = node.extra.version ---@type string
+  log.info('Loading JAR File Content...')
+  neojava_core_gradle.load_jar(group, name, version, function(_state, items)
+    node.extra.java_type_loading = false
+    if _state == neojava_core_utils.SUCCEED_STATE then
+      local _node_children = {}
+      for index, item in ipairs(items) do
+        if not item.parent_path and item.name == group_parts[1] then
+          item = group_package(item, true)
+        end
+        items[index] = item
+      end
+      sort_items(items)
+      local gradle_library_item = find_item(gradle_libraries_items, node:get_id())
+      gradle_library_item.loaded = true
+      gradle_library_item.children = items
       for index, item in ipairs(items) do
         local _node_child = convert_item_to_node(item, node.level + 1)
         _node_children[index] = _node_child
