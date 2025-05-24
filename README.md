@@ -1,13 +1,16 @@
 <br/>
-<div align="center">
-  <a  href="https://github.com/oclay1st/neojava.nvim">
-    <img src="assets/tree.png" alt="Logo" >
-  </a>
-</div>
+<!-- <div align="center"> -->
+<!--   <a  href="https://github.com/oclay1st/neojava.nvim"> -->
+<!--     <img src="assets/tree.png" alt="Logo" > -->
+<!--   </a> -->
+<!-- </div> -->
 
 **neojava.nvim** is a source plugin of Neotree to explore your Java projects.
 
 <img src="assets/screenshot.png"  align="center" alt='neojava'>
+
+## 🔥 Status
+This plugin is under **development** and has some known issues, so it is not considered stable enough
 
 ## ✨ Features
 
